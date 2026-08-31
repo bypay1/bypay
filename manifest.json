@@ -1,0 +1,14 @@
+{
+  "name": "Bypay Bank",
+  "short_name": "Bypay",
+  "description": "Bypay Bank — Smart Banking. Secure Future.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A2463",
+  "theme_color": "#0A2463",
+  "icons": [
+    {"src":"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%230A2463'/><text y='140' x='20' font-size='130' font-family='serif' fill='white' font-weight='bold'>B</text></svg>","sizes":"192x192","type":"image/svg+xml"},
+    {"src":"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%230A2463'/><text y='390' x='40' font-size='360' font-family='serif' fill='white' font-weight='bold'>B</text></svg>","sizes":"512x512","type":"image/svg+xml"}
+  ]
+}
