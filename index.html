@@ -2476,10 +2476,14 @@ function HomeTab({
   }, greet, " 👋"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 700,
-      fontSize: 18,
-      color: "#fff"
+      fontSize: 17,
+      color: "#fff",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
+      maxWidth: "calc(100vw - 140px)"
     }
-  }, user.first_name, " ", user.last_name)), /*#__PURE__*/React.createElement("div", {
+  }, user.full_name || user.first_name + " " + user.last_name)), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 10
@@ -2526,11 +2530,31 @@ function HomeTab({
     }
   }, hidden ? "$ ●●●●●" : fmt(acct.balance))), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 11,
-      color: "rgba(255,255,255,0.4)",
       marginBottom: 18
     }
-  }, "Acct No: ", user.account_number || "Loading...", " · Routing: ", user.routing_number || BANK.routing), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 600,
+      color: "rgba(255,255,255,0.6)",
+      letterSpacing: .5,
+      marginBottom: 3
+    }
+  }, "ACCOUNT NUMBER"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      color: "#fff",
+      letterSpacing: 2,
+      fontFamily: "monospace"
+    }
+  }, user.account_number || "Loading..."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: "rgba(255,255,255,0.4)",
+      marginTop: 2
+    }
+  }, "Routing: ", user.routing_number || BANK.routing)), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 10
