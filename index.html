@@ -2095,12 +2095,12 @@ function ClientApp({
     type
   });
 
-  /* Periodic status check — kicks out suspended users within 60s */
+  /* Periodic admin status check — kicks out suspended admins within 60s */
   useEffect(() => {
-    if (IS_DEMO) return;
+    if (IS_DEMO || !admin?.id) return;
     const interval = setInterval(async () => {
       try {
-        const snap = await fbDB.collection("users").doc(user.id).get();
+        const snap = await fbDB.collection("admin_users").doc(admin.id).get();
         const st = snap.data()?.status;
         if (st === "frozen" || st === "suspended" || st === "blocked") {
           await fbAuth.signOut();
@@ -2109,7 +2109,7 @@ function ClientApp({
       } catch (e) {}
     }, 60000);
     return () => clearInterval(interval);
-  }, [user.id]);
+  }, [admin?.id]);
   useEffect(() => {
     (async () => {
       sLoad(true);
