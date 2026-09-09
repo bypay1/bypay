@@ -38,6 +38,7 @@ window.onerror=function(msg,src,line){
 };
 window.addEventListener("unhandledrejection",function(e){console.error("Unhandled:",e.reason);});
 </script>
+<!-- React & ReactDOM — bundled inside this file, no download needed -->
 <script>/**
  * @license React
  * react.production.min.js
@@ -338,6 +339,7 @@ var d=null!=c&&c.hydratedSources||null,e=!1,f="",g=bj;null!==c&&void 0!==c&&(!0=
 function(a,b,c){if(!Vd(b))throw Error(n(200));return Wd(null,a,b,!1,c)};Q.unmountComponentAtNode=function(a){if(!Vd(a))throw Error(n(40));return a._reactRootContainer?(zb(function(){Wd(null,null,a,!1,function(){a._reactRootContainer=null;a[Ja]=null})}),!0):!1};Q.unstable_batchedUpdates=Tf;Q.unstable_renderSubtreeIntoContainer=function(a,b,c,d){if(!Vd(c))throw Error(n(200));if(null==a||void 0===a._reactInternals)throw Error(n(38));return Wd(a,b,c,!1,d)};Q.version="18.2.0-next-9e3b772b8-20220608"});
 })();
 </script>
+<!-- Firebase — needs internet for live database -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -357,7 +359,10 @@ function(a,b,c){if(!Vd(b))throw Error(n(200));return Wd(null,a,b,!1,c)};Q.unmoun
 (function waitForReact(attempt){
   if(typeof React==='undefined'||typeof ReactDOM==='undefined'){
     if(attempt<100){setTimeout(function(){waitForReact(attempt+1);},50);}
-    else{var el=document.getElementById('pre-loader');if(el)el.innerHTML='<div style="padding:32px;color:#fff;text-align:center"><div style="font-size:48px;margin-bottom:16px">⚠️</div><div style="font-size:18px;font-weight:700;margin-bottom:10px">Failed to Load</div><div style="font-size:13px;color:rgba(255,255,255,0.6)">Check your internet connection and refresh.</div></div>';}
+    else{
+      var el=document.getElementById('pre-loader');
+      if(el)el.innerHTML='<div style="padding:32px;color:#fff;text-align:center"><div style="font-size:48px;margin-bottom:16px">⚠️</div><div style="font-size:18px;font-weight:700;margin-bottom:10px">Failed to Load</div><div style="font-size:13px;color:rgba(255,255,255,0.6)">Check your internet connection and refresh.</div></div>';
+    }
     return;
   }
 const {
@@ -525,7 +530,10 @@ const DS = {
     const uid2 = c.user.uid;
     if (admin) {
       const s = await fbDB.collection("admin_users").doc(uid2).get();
-      if (!s.exists) throw new Error("Admin not found");
+      if (!s.exists) {
+        await fbAuth.signOut();
+        throw new Error("Admin account not found");
+      }
       return {
         type: "admin",
         admin: {
@@ -536,12 +544,41 @@ const DS = {
     }
     try {
       const [us, as] = await Promise.all([fbDB.collection("users").doc(uid2).get(), fbDB.collection("accounts").where("user_id", "==", uid2).limit(1).get()]);
-      const userData = us.data();
-      /* ── STATUS CHECK: block frozen/suspended accounts ── */
-      if (userData?.status === "frozen") throw new Error("Your account has been suspended. Please contact support at " + BANK.phone + " or " + BANK.email);
-      if (userData?.status === "suspended") throw new Error("Your account has been suspended. Please contact support at " + BANK.phone + " or " + BANK.email);
-      if (userData?.status === "blocked") throw new Error("Your account has been blocked. Please contact support at " + BANK.phone + " or " + BANK.email);
+      const userData = us.data() || {};
+      /* ── STATUS CHECK: sign out first, THEN block ── */
+      const st = userData.status || "active";
+      if (st === "frozen" || st === "suspended" || st === "blocked") {
+        await fbAuth.signOut();
+        throw new Error("🔒 Your account has been suspended. Please contact Bypay Bank support:\n📞 " + BANK.phone + "\n✉️ " + BANK.email);
+      }
       const a = as.docs[0];
+      const acctData = a?.data() || {};
+      /* ── Generate account number if missing (old accounts) ── */
+      let acct_no = userData.account_number;
+      if (!acct_no) {
+        acct_no = genAcct();
+        await fbDB.collection("users").doc(uid2).update({
+          account_number: acct_no,
+          routing_number: BANK.routing
+        });
+        userData.account_number = acct_no;
+        userData.routing_number = BANK.routing;
+      }
+      /* ── Generate account doc if missing ── */
+      let acctId = a?.id;
+      if (!acctId) {
+        const newAcct = {
+          user_id: uid2,
+          currency: "USD",
+          balance: 0,
+          savings: 0,
+          loan_balance: 0,
+          status: "active"
+        };
+        const ref = await fbDB.collection("accounts").add(newAcct);
+        acctId = ref.id;
+        Object.assign(acctData, newAcct);
+      }
       return {
         type: "client",
         user: {
@@ -549,14 +586,13 @@ const DS = {
           ...userData
         },
         account: {
-          id: a?.id,
-          ...a?.data()
+          id: acctId,
+          ...acctData
         }
       };
     } catch (e) {
-      /* Re-throw status errors as-is, wrap others */
-      if (e.message.includes("suspended") || e.message.includes("blocked") || e.message.includes("support")) throw e;
-      throw new Error("Login failed. Please try again. (" + e.message + ")");
+      if (e.message.includes("suspended") || e.message.includes("blocked") || e.message.includes("contact")) throw e;
+      throw new Error("Login failed — check your internet connection and try again. (" + e.message + ")");
     }
   },
   async register(first_name, last_name, email, phone, pass) {
@@ -2058,6 +2094,22 @@ function ClientApp({
     msg,
     type
   });
+
+  /* Periodic status check — kicks out suspended users within 60s */
+  useEffect(() => {
+    if (IS_DEMO) return;
+    const interval = setInterval(async () => {
+      try {
+        const snap = await fbDB.collection("users").doc(user.id).get();
+        const st = snap.data()?.status;
+        if (st === "frozen" || st === "suspended" || st === "blocked") {
+          await fbAuth.signOut();
+          onLogout();
+        }
+      } catch (e) {}
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [user.id]);
   useEffect(() => {
     (async () => {
       sLoad(true);
@@ -2548,7 +2600,7 @@ function HomeTab({
       letterSpacing: 2,
       fontFamily: "monospace"
     }
-  }, user.account_number || "Loading..."), /*#__PURE__*/React.createElement("div", {
+  }, user.account_number || "—"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
       color: "rgba(255,255,255,0.4)",
@@ -6206,6 +6258,22 @@ function AdminApp({
     msg,
     type
   });
+
+  /* Periodic status check — kicks out suspended users within 60s */
+  useEffect(() => {
+    if (IS_DEMO) return;
+    const interval = setInterval(async () => {
+      try {
+        const snap = await fbDB.collection("users").doc(user.id).get();
+        const st = snap.data()?.status;
+        if (st === "frozen" || st === "suspended" || st === "blocked") {
+          await fbAuth.signOut();
+          onLogout();
+        }
+      } catch (e) {}
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [user.id]);
   useEffect(() => {
     (async () => {
       sLoad(true);
@@ -6248,14 +6316,22 @@ function AdminApp({
   }
   async function freezeUser(u) {
     const ns = u.status === "frozen" ? "active" : "frozen";
+    /* Write frozen status to Firestore users collection */
     await DS.updateUser(u.id, {
       status: ns
     });
+    /* Also update accounts collection */
     const a = accounts.find(a => a.user_id === u.id);
     if (a) await DS.updateAccount(a.id, {
       status: ns
     });
-    if (ns === "frozen") await DS.addNotif(u.id, "Your account has been suspended and login has been disabled. Contact us: " + BANK.phone + " or " + BANK.email, "alert");else await DS.addNotif(u.id, "Your Bypay Bank account has been reactivated. Welcome back!", "success");
+    if (ns === "frozen") {
+      await DS.addNotif(u.id, "🔒 Your account has been suspended by Bypay Bank. Login has been disabled. Contact support immediately: " + BANK.phone + " or " + BANK.email, "alert");
+      t$("✓ " + (u.full_name || u.first_name) + " is now SUSPENDED — login blocked", "success");
+    } else {
+      await DS.addNotif(u.id, "✅ Your Bypay Bank account has been reactivated. You can now login again. Welcome back!", "success");
+      t$("✓ " + (u.full_name || u.first_name) + " is now ACTIVE — login restored", "success");
+    }
     sUsers(prev => prev.map(x => x.id === u.id ? {
       ...x,
       status: ns
@@ -6264,7 +6340,6 @@ function AdminApp({
       ...x,
       status: ns
     } : x));
-    t$(`${u.full_name || u.name} ${ns}`);
   }
   const ADMIN_TABS = [{
     id: "dashboard",
