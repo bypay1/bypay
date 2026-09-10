@@ -38,7 +38,6 @@ window.onerror=function(msg,src,line){
 };
 window.addEventListener("unhandledrejection",function(e){console.error("Unhandled:",e.reason);});
 </script>
-<!-- React & ReactDOM bundled inline — no download needed -->
 <script>/**
  * @license React
  * react.production.min.js
@@ -339,7 +338,6 @@ var d=null!=c&&c.hydratedSources||null,e=!1,f="",g=bj;null!==c&&void 0!==c&&(!0=
 function(a,b,c){if(!Vd(b))throw Error(n(200));return Wd(null,a,b,!1,c)};Q.unmountComponentAtNode=function(a){if(!Vd(a))throw Error(n(40));return a._reactRootContainer?(zb(function(){Wd(null,null,a,!1,function(){a._reactRootContainer=null;a[Ja]=null})}),!0):!1};Q.unstable_batchedUpdates=Tf;Q.unstable_renderSubtreeIntoContainer=function(a,b,c,d){if(!Vd(c))throw Error(n(200));if(null==a||void 0===a._reactInternals)throw Error(n(38));return Wd(a,b,c,!1,d)};Q.version="18.2.0-next-9e3b772b8-20220608"});
 })();
 </script>
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -530,24 +528,31 @@ const DS = {
         const s = await fbDB.collection("admin_users").doc(uid2).get();
         if (!s.exists) {
           await fbAuth.signOut();
-          throw new Error("Admin account not found. Make sure your UID (" + uid2 + ") exists in the admin_users collection in Firestore.");
+          throw new Error("Admin account not found.\nUID checked: " + uid2 + "\nFix: Add this UID as a document ID in the admin_users Firestore collection.");
         }
-        const adminData = s.data();
-        if (adminData.status === "inactive" || adminData.status === "disabled") {
+        const adminData = s.data() || {};
+        /* Handle case where fields are missing from Firestore doc */
+        const st = adminData.status || "";
+        if (st === "inactive" || st === "disabled") {
           await fbAuth.signOut();
-          throw new Error("Admin account is disabled. Contact the system administrator.");
+          throw new Error("Admin account is disabled. Set status to 'active' in Firestore.");
         }
+        /* Build admin object with safe fallbacks */
         return {
           type: "admin",
           admin: {
             id: uid2,
+            name: adminData.name || adminData.displayName || "Admin",
+            email: adminData.email || email,
+            role: adminData.role || "admin",
+            status: adminData.status || "active",
             ...adminData
           }
         };
       } catch (e) {
-        if (e.message.includes("admin_users") || e.message.includes("Admin")) throw e;
+        if (e.message.includes("UID") || e.message.includes("Admin") || e.message.includes("admin")) throw e;
         await fbAuth.signOut().catch(() => {});
-        throw new Error("Admin login failed: " + e.message + ". Check Firestore rules allow authenticated reads.");
+        throw new Error("Admin login error: " + e.message + "\nCheck: Firestore security rules must allow authenticated reads.");
       }
     }
     try {
