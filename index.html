@@ -38,6 +38,7 @@ window.onerror=function(msg,src,line){
 };
 window.addEventListener("unhandledrejection",function(e){console.error("Unhandled:",e.reason);});
 </script>
+<!-- React & ReactDOM bundled inline -->
 <script>/**
  * @license React
  * react.production.min.js
@@ -338,6 +339,7 @@ var d=null!=c&&c.hydratedSources||null,e=!1,f="",g=bj;null!==c&&void 0!==c&&(!0=
 function(a,b,c){if(!Vd(b))throw Error(n(200));return Wd(null,a,b,!1,c)};Q.unmountComponentAtNode=function(a){if(!Vd(a))throw Error(n(40));return a._reactRootContainer?(zb(function(){Wd(null,null,a,!1,function(){a._reactRootContainer=null;a[Ja]=null})}),!0):!1};Q.unstable_batchedUpdates=Tf;Q.unstable_renderSubtreeIntoContainer=function(a,b,c,d){if(!Vd(c))throw Error(n(200));if(null==a||void 0===a._reactInternals)throw Error(n(38));return Wd(a,b,c,!1,d)};Q.version="18.2.0-next-9e3b772b8-20220608"});
 })();
 </script>
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -6251,6 +6253,73 @@ function ProfileTab({
   }, BANK.name, " · ", BANK.fdic, /*#__PURE__*/React.createElement("br", null), BANK.address, /*#__PURE__*/React.createElement("br", null), "📞 ", BANK.phone, " · ✉️ ", BANK.email)));
 }
 
+/* Error Boundary for AdminApp */
+class AdminErrorBoundary extends React.Component {
+  constructor(p) {
+    super(p);
+    this.state = {
+      err: null
+    };
+  }
+  static getDerivedStateFromError(e) {
+    return {
+      err: e.message || "Unknown error"
+    };
+  }
+  render() {
+    if (this.state.err) return /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: "fixed",
+        inset: 0,
+        background: "#fff",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 28,
+        textAlign: "center"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 48,
+        marginBottom: 16
+      }
+    }, "💥"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontWeight: 700,
+        fontSize: 18,
+        marginBottom: 8,
+        color: "#C9003A"
+      }
+    }, "Admin Panel Crashed"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        color: "#64748B",
+        lineHeight: 1.8,
+        maxWidth: 300,
+        marginBottom: 20
+      }
+    }, this.state.err), /*#__PURE__*/React.createElement("button", {
+      onClick: () => {
+        this.setState({
+          err: null
+        });
+        window.location.reload();
+      },
+      style: {
+        background: "#0A2463",
+        color: "#fff",
+        border: "none",
+        borderRadius: 12,
+        padding: "13px 28px",
+        fontWeight: 700,
+        fontSize: 15,
+        cursor: "pointer"
+      }
+    }, "🔄 Reload"));
+    return this.props.children;
+  }
+}
 /* ══════════════════════════════════════════════════════
    ADMIN APP
 ══════════════════════════════════════════════════════ */
@@ -6264,6 +6333,7 @@ function AdminApp({
   const [notifs, sNotifs] = useState([]);
   const [loans, sLoans] = useState([]);
   const [loading, sLoad] = useState(true);
+  const [loadErr, sLoadErr] = useState(null);
   const [activeTab, sTab] = useState("dashboard");
   const [toast, sToast] = useState(null);
   const [screen, sScreen] = useState(null);
@@ -6290,15 +6360,18 @@ function AdminApp({
   useEffect(() => {
     (async () => {
       sLoad(true);
-      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000));
+      sLoadErr(null);
+      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("Data load timed out after 8s. Check Firestore security rules: must be 'allow read, write: if request.auth != null'")), 8000));
       try {
         const [u, a, t, n, l] = await Promise.race([Promise.all([DS.getAllUsers(), DS.getAllAccounts(), DS.getAllTxns(), DS.getAllNotifs(), DS.getAllLoans()]), timeout]);
-        sUsers(u);
-        sAccounts(a);
-        sTxns(t);
-        sNotifs(n);
-        sLoans(l);
+        sUsers(u || []);
+        sAccounts(a || []);
+        sTxns(t || []);
+        sNotifs(n || []);
+        sLoans(l || []);
       } catch (e) {
+        console.error("Admin data load failed:", e.message);
+        sLoadErr(e.message);
         sUsers([]);
         sAccounts([]);
         sTxns([]);
@@ -6385,16 +6458,100 @@ function AdminApp({
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      gap: 16
+      gap: 16,
+      padding: 24
     }
   }, /*#__PURE__*/React.createElement(Spin, {
     size: 36
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 14,
-      color: C.muted
+      color: C.muted,
+      textAlign: "center"
     }
-  }, "Loading admin data…"));
+  }, "Loading admin data…"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: C.border,
+      textAlign: "center"
+    }
+  }, "Connecting to Firebase…"));
+  if (loadErr && users.length === 0) return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      inset: 0,
+      background: "#fff",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 28
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 48,
+      marginBottom: 16
+    }
+  }, "⚠️"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      fontSize: 18,
+      marginBottom: 8,
+      color: C.red,
+      textAlign: "center"
+    }
+  }, "Admin Data Failed to Load"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: C.muted,
+      lineHeight: 1.9,
+      textAlign: "center",
+      marginBottom: 20,
+      maxWidth: 320
+    }
+  }, loadErr), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.navyD,
+      borderRadius: 14,
+      padding: "14px 18px",
+      width: "100%",
+      maxWidth: 320,
+      marginBottom: 20
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      color: "rgba(255,255,255,0.5)",
+      marginBottom: 8,
+      letterSpacing: 1
+    }
+  }, "FIRESTORE RULES (copy & publish):"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "monospace",
+      fontSize: 11,
+      color: "#4ade80",
+      lineHeight: 2
+    }
+  }, "rules_version = '2';", /*#__PURE__*/React.createElement("br", null), "service cloud.firestore {", /*#__PURE__*/React.createElement("br", null), "  match /databases/{db}/documents {", /*#__PURE__*/React.createElement("br", null), "    match /{doc=**} {", /*#__PURE__*/React.createElement("br", null), "      allow read, write: if request.auth != null;", /*#__PURE__*/React.createElement("br", null), "    }", /*#__PURE__*/React.createElement("br", null), "}}", /*#__PURE__*/React.createElement("br", null))), /*#__PURE__*/React.createElement(Btn, {
+    onClick: () => {
+      sLoadErr(null);
+      sLoad(true);
+      window.location.reload();
+    },
+    full: true,
+    color: C.navy
+  }, "🔄 Retry"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 14
+    }
+  }, /*#__PURE__*/React.createElement(Btn, {
+    onClick: onLogout,
+    ghost: true,
+    full: true,
+    color: C.red,
+    sm: true
+  }, "Sign Out")));
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
@@ -10773,10 +10930,10 @@ function App() {
     initAccount: session.account,
     onLogout: onLogout
   });
-  if (phase === "admin" && session) return /*#__PURE__*/React.createElement(AdminApp, {
+  if (phase === "admin" && session) return /*#__PURE__*/React.createElement(AdminErrorBoundary, null, /*#__PURE__*/React.createElement(AdminApp, {
     admin: session.admin,
     onLogout: onLogout
-  });
+  }));
   return /*#__PURE__*/React.createElement(AuthScreen, {
     onLogin: onLogin
   });
