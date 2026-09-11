@@ -357,7 +357,7 @@ function(a,b,c){if(!Vd(b))throw Error(n(200));return Wd(null,a,b,!1,c)};Q.unmoun
 (function waitForReact(attempt){
   if(typeof React==='undefined'||typeof ReactDOM==='undefined'){
     if(attempt<100){setTimeout(function(){waitForReact(attempt+1);},50);}
-    else{var el=document.getElementById('pre-loader');if(el)el.innerHTML='<div style="padding:32px;color:#fff;text-align:center"><div style="font-size:48px;margin-bottom:16px">⚠️</div><div style="font-size:18px;font-weight:700;margin-bottom:10px">Failed to Load</div><div style="font-size:13px;color:rgba(255,255,255,0.6)">Check your internet connection and refresh.</div></div>';}
+    else{var el=document.getElementById('pre-loader');if(el)el.innerHTML='<div style="padding:32px;color:#fff;text-align:center"><div style="font-size:48px;margin-bottom:16px">⚠️</div><div style="font-size:18px;font-weight:700;margin-bottom:10px">Failed to Load</div><div style="font-size:13px;color:rgba(255,255,255,0.6)">Check your internet and refresh.</div></div>';}
     return;
   }
 const {
@@ -2146,6 +2146,11 @@ function ClientApp({
     })();
   }, [user.id]);
   async function doTxn(type, cat, desc, amt) {
+    /* Block all transactions if account is locked */
+    if (acct.status === "locked") {
+      t$("Your account is locked. You can view your balance but cannot perform transactions. Contact support: " + BANK.phone, "error");
+      return null;
+    }
     const n = parseFloat(amt);
     if (!n || n <= 0) return t$("Enter a valid amount", "error");
     if (type === "debit" && n > acct.balance) return t$("Insufficient funds", "error");
@@ -2719,7 +2724,38 @@ function HomeTab({
       color: "#fff",
       flexShrink: 0
     }
-  }, "Finish →")), /*#__PURE__*/React.createElement(Card, {
+  }, "Finish →")), acct.status === "locked" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.redP,
+      border: `1.5px solid ${C.red}44`,
+      borderRadius: 14,
+      padding: "14px 16px",
+      marginTop: 12,
+      display: "flex",
+      gap: 12,
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 24
+    }
+  }, "🔒"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      fontSize: 14,
+      color: C.red
+    }
+  }, "Account Transactions Locked"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: C.muted,
+      marginTop: 2
+    }
+  }, "You can view your account but cannot send money or make payments. Contact support: ", BANK.phone))), /*#__PURE__*/React.createElement(Card, {
     style: {
       marginTop: 12,
       padding: "20px 16px",
@@ -6383,22 +6419,21 @@ function AdminApp({
     t$(`${u.full_name || u.name} ${patch.kyc_status === "verified" ? "verified" : "unverified"}`);
   }
   async function freezeUser(u) {
+    /* FREEZE = blocks login completely */
     const ns = u.status === "frozen" ? "active" : "frozen";
-    /* Write frozen status to Firestore users collection */
     await DS.updateUser(u.id, {
       status: ns
     });
-    /* Also update accounts collection */
     const a = accounts.find(a => a.user_id === u.id);
     if (a) await DS.updateAccount(a.id, {
       status: ns
     });
     if (ns === "frozen") {
       await DS.addNotif(u.id, "🔒 Your account has been suspended by Bypay Bank. Login has been disabled. Contact support immediately: " + BANK.phone + " or " + BANK.email, "alert");
-      t$("✓ " + (u.full_name || u.first_name) + " is now SUSPENDED — login blocked", "success");
+      t$("✓ " + (u.full_name || u.first_name) + " SUSPENDED — login blocked", "success");
     } else {
-      await DS.addNotif(u.id, "✅ Your Bypay Bank account has been reactivated. You can now login again. Welcome back!", "success");
-      t$("✓ " + (u.full_name || u.first_name) + " is now ACTIVE — login restored", "success");
+      await DS.addNotif(u.id, "✅ Your Bypay Bank account has been reactivated. You can now login. Welcome back!", "success");
+      t$("✓ " + (u.full_name || u.first_name) + " ACTIVE — login restored", "success");
     }
     sUsers(prev => prev.map(x => x.id === u.id ? {
       ...x,
@@ -6408,6 +6443,27 @@ function AdminApp({
       ...x,
       status: ns
     } : x));
+  }
+  async function lockUser(u) {
+    /* LOCK = can login + view account, but CANNOT do transactions */
+    const acct = accounts.find(a => a.user_id === u.id);
+    const currentAcctStatus = acct?.status || "active";
+    const ns = currentAcctStatus === "locked" ? "active" : "locked";
+    /* Only lock/unlock the ACCOUNT, not the user login */
+    if (acct) await DS.updateAccount(acct.id, {
+      status: ns
+    });
+    if (ns === "locked") {
+      await DS.addNotif(u.id, "🔐 Your account transactions have been temporarily restricted by Bypay Bank. You can still view your balance and history. Contact support: " + BANK.phone, "warning");
+      t$("✓ " + (u.full_name || u.first_name) + " LOCKED — can login, no transactions", "success");
+    } else {
+      await DS.addNotif(u.id, "✅ Your account transaction restrictions have been lifted. You can now make transfers and payments. Welcome back!", "success");
+      t$("✓ " + (u.full_name || u.first_name) + " UNLOCKED — full access restored", "success");
+    }
+    sAccounts(prev => prev.map(a => a.id === acct?.id ? {
+      ...a,
+      status: ns
+    } : a));
   }
   const ADMIN_TABS = [{
     id: "dashboard",
@@ -6559,6 +6615,7 @@ function AdminApp({
     sAccounts,
     verifyUser,
     freezeUser,
+    lockUser,
     t$
   }), !screen && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6822,7 +6879,7 @@ function AdminApp({
         padding: "2px 7px",
         borderRadius: 8
       }
-    }, u.kyc_status === "verified" ? "✓ KYC Verified" : "⚠ KYC Pending"), u.status !== "active" && /*#__PURE__*/React.createElement("span", {
+    }, u.kyc_status === "verified" ? "✓ KYC Verified" : "⚠ KYC Pending"), u.status === "frozen" && /*#__PURE__*/React.createElement("span", {
       style: {
         background: C.redP,
         color: C.red,
@@ -6831,7 +6888,19 @@ function AdminApp({
         padding: "2px 7px",
         borderRadius: 8
       }
-    }, u.status))), /*#__PURE__*/React.createElement("div", {
+    }, "🔒 Suspended"), (() => {
+      const ua = acctMap[u.id];
+      return ua?.status === "locked" ? /*#__PURE__*/React.createElement("span", {
+        style: {
+          background: "#FFF7ED",
+          color: C.orange,
+          fontSize: 10,
+          fontWeight: 700,
+          padding: "2px 7px",
+          borderRadius: 8
+        }
+      }, "🔐 Txn Locked") : null;
+    })())), /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: "right",
         flexShrink: 0
@@ -7781,9 +7850,11 @@ function AdminClientDetail({
   onBack,
   verifyUser,
   freezeUser,
+  lockUser,
   t$,
   sUsers,
-  sAccounts
+  sAccounts,
+  acctMap
 }) {
   const [tab, sTab] = useState("profile");
   const [acct, sAcct] = useState({
@@ -7985,8 +8056,8 @@ function AdminClientDetail({
     status: user.kyc_status
   }), /*#__PURE__*/React.createElement("span", {
     style: {
-      background: user.status === "active" ? C.greenP : C.redP,
-      color: user.status === "active" ? C.green : C.red,
+      background: user.status === "active" ? C.greenP : user.status === "frozen" ? C.redP : "#FFF7ED",
+      color: user.status === "active" ? C.green : user.status === "frozen" ? C.red : C.orange,
       borderRadius: 20,
       padding: "3px 10px",
       fontSize: 11,
@@ -8040,19 +8111,43 @@ function AdminClientDetail({
       maxWidth: "60%",
       textTransform: "capitalize"
     }
-  }, v)))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 10
-    }
-  }, /*#__PURE__*/React.createElement(Btn, {
+  }, v)))), /*#__PURE__*/React.createElement(Btn, {
     onClick: () => {
       verifyUser(user);
     },
     full: true,
     color: user.kyc_status === "verified" ? C.muted : C.green,
-    sm: true
-  }, user.kyc_status === "verified" ? "Revoke KYC" : "Verify KYC ✓"), /*#__PURE__*/React.createElement(Btn, {
+    sm: true,
+    style: {
+      marginBottom: 10
+    }
+  }, user.kyc_status === "verified" ? "✓ Revoke KYC Verification" : "✓ Verify KYC Identity"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 1,
+      background: C.border,
+      margin: "12px 0"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.redP,
+      borderRadius: 14,
+      padding: "14px 16px",
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      fontSize: 13,
+      color: C.red,
+      marginBottom: 3
+    }
+  }, "🔒 Account Suspension (Blocks Login)"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: C.muted,
+      marginBottom: 10
+    }
+  }, "Suspended users cannot log in at all. Use for serious violations."), /*#__PURE__*/React.createElement(Btn, {
     onClick: () => {
       freezeUser(user);
     },
@@ -8060,7 +8155,38 @@ function AdminClientDetail({
     color: user.status === "frozen" ? C.green : C.red,
     danger: user.status !== "frozen",
     sm: true
-  }, user.status === "frozen" ? "Unfreeze Account 🔓" : "Suspend & Block Login 🔒"))), tab === "balance" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, user.status === "frozen" ? "🔓 Unsuspend — Restore Login" : "🔒 Suspend Account — Block Login")), (() => {
+    const acct = acctMap?.[user.id];
+    const isLocked = acct?.status === "locked";
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: "#FFF7ED",
+        borderRadius: 14,
+        padding: "14px 16px",
+        border: `1.5px solid ${C.orange}33`
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontWeight: 700,
+        fontSize: 13,
+        color: C.orange,
+        marginBottom: 3
+      }
+    }, "🔐 Transaction Lock (Login Allowed)"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: C.muted,
+        marginBottom: 10
+      }
+    }, "Locked users can log in and view their account but cannot send money, pay bills, or perform any transactions."), /*#__PURE__*/React.createElement(Btn, {
+      onClick: () => {
+        lockUser(user);
+      },
+      full: true,
+      color: isLocked ? C.green : C.orange,
+      sm: true
+    }, isLocked ? "🔓 Unlock — Restore Transactions" : "🔐 Lock Transactions Only"));
+  })()), tab === "balance" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "1fr 1fr 1fr",
