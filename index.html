@@ -461,6 +461,8 @@ const today = () => new Date().toLocaleDateString("en-US", {
   day: "2-digit"
 });
 const hashP = p => `h_${p}_bpy`;
+const verifyPin = (entered, u) => !!u?.pin_hash && hashP(entered) === u.pin_hash;
+const hasPinSet = u => !!(u?.pin_hash && u.pin_hash.length > 4);
 const age = dob => {
   if (!dob) return 0;
   const d = new Date(dob);
@@ -1446,6 +1448,11 @@ const CAT = {
     icon: "💼",
     bg: "#EEF3FF",
     color: C.blue
+  },
+  international_wire: {
+    icon: "🌍",
+    bg: "#F5F3FF",
+    color: "#7C3AED"
   },
   payroll: {
     icon: "💼",
@@ -2724,7 +2731,51 @@ function HomeTab({
       color: "#fff",
       flexShrink: 0
     }
-  }, "Finish →")), acct.status === "locked" && /*#__PURE__*/React.createElement("div", {
+  }, "Finish →")), !user.pin_hash && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#FFF7ED",
+      border: `1px solid ${C.orange}44`,
+      borderRadius: 14,
+      padding: "12px 16px",
+      marginTop: 12,
+      display: "flex",
+      gap: 12,
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 22
+    }
+  }, "🔢"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      fontSize: 13,
+      color: C.orange
+    }
+  }, "Set Your Transaction PIN"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: C.muted,
+      marginTop: 2
+    }
+  }, "Create a 4-digit PIN to enable transfers and payments")), /*#__PURE__*/React.createElement("button", {
+    onClick: () => push(/*#__PURE__*/React.createElement(SecurityScreen, null)),
+    style: {
+      background: C.orange,
+      border: "none",
+      borderRadius: 9,
+      padding: "6px 12px",
+      fontWeight: 700,
+      cursor: "pointer",
+      fontSize: 12,
+      color: "#fff",
+      flexShrink: 0
+    }
+  }, "Set PIN →")), acct.status === "locked" && /*#__PURE__*/React.createElement("div", {
     style: {
       background: C.redP,
       border: `1.5px solid ${C.red}44`,
@@ -3548,6 +3599,12 @@ function PayTab({
       type: "ach"
     })
   }, {
+    icon: "🌍",
+    title: "International Wire",
+    sub: "20+ countries · SWIFT",
+    color: "#7C3AED",
+    s: /*#__PURE__*/React.createElement(InternationalTransferScreen, null)
+  }, {
     icon: "🧾",
     title: "Pay Bills",
     sub: "Utilities & more",
@@ -3702,7 +3759,8 @@ function TransferScreen({
     }
   }
   async function confirm() {
-    if (pin !== "1234") return t$("Incorrect PIN. Demo PIN: 1234", "error");
+    if (!hasPinSet(user)) return t$("You haven't set a PIN yet. Go to Account → Security Center → PIN to set one.", "warning");
+    if (!verifyPin(pin, user)) return t$("Incorrect PIN. Please try again.", "error");
     const n = parseFloat(amt);
     const cat = method === "zelle" ? "zelle_out" : "transfer_out";
     const desc = `${method === "zelle" ? "Zelle® to" : "ACH to"} ${resolved?.name}${memo ? ` — ${memo}` : ""}`;
@@ -4131,12 +4189,16 @@ function TransferScreen({
       fontSize: 15,
       marginBottom: 4
     }
-  }, "Enter Your PIN"), /*#__PURE__*/React.createElement("div", {
+  }, "Enter Your Transaction PIN"), !hasPinSet(user) && /*#__PURE__*/React.createElement("div", {
     style: {
+      background: "#FFF7ED",
+      borderRadius: 10,
+      padding: "8px 14px",
       fontSize: 12,
-      color: C.muted
+      color: C.orange,
+      marginTop: 6
     }
-  }, "Demo PIN: 1234")), /*#__PURE__*/React.createElement(PinPad, {
+  }, "⚠️ No PIN set yet — go to ", /*#__PURE__*/React.createElement("strong", null, "Account → Security Center → PIN"), " to create one first.")), /*#__PURE__*/React.createElement(PinPad, {
     value: pin,
     onChange: sPin
   }), /*#__PURE__*/React.createElement("div", {
@@ -4148,6 +4210,708 @@ function TransferScreen({
     full: true,
     disabled: pin.length < 4
   }, "Confirm & Send ", fmt(parseFloat(amt) || 0)))));
+}
+
+/* ══════════════════════════════════════════════════════
+   INTERNATIONAL TRANSFER SCREEN
+══════════════════════════════════════════════════════ */
+const COUNTRIES = [{
+  code: "NG",
+  name: "Nigeria",
+  currency: "NGN",
+  symbol: "₦",
+  flag: "🇳🇬",
+  rate: 1650,
+  swift_example: "ZENITHNG",
+  iban: false
+}, {
+  code: "GB",
+  name: "United Kingdom",
+  currency: "GBP",
+  symbol: "£",
+  flag: "🇬🇧",
+  rate: 0.79,
+  swift_example: "BARCGB22",
+  iban: true
+}, {
+  code: "EU",
+  name: "Eurozone",
+  currency: "EUR",
+  symbol: "€",
+  flag: "🇪🇺",
+  rate: 0.92,
+  swift_example: "DEUTDEDB",
+  iban: true
+}, {
+  code: "CA",
+  name: "Canada",
+  currency: "CAD",
+  symbol: "CA$",
+  flag: "🇨🇦",
+  rate: 1.36,
+  swift_example: "ROYCCAT2",
+  iban: false
+}, {
+  code: "AU",
+  name: "Australia",
+  currency: "AUD",
+  symbol: "A$",
+  flag: "🇦🇺",
+  rate: 1.53,
+  swift_example: "ANZBAU3M",
+  iban: false
+}, {
+  code: "IN",
+  name: "India",
+  currency: "INR",
+  symbol: "₹",
+  flag: "🇮🇳",
+  rate: 83.5,
+  swift_example: "HDFCINBB",
+  iban: false
+}, {
+  code: "GH",
+  name: "Ghana",
+  currency: "GHS",
+  symbol: "₵",
+  flag: "🇬🇭",
+  rate: 15.8,
+  swift_example: "GHCBGHAC",
+  iban: false
+}, {
+  code: "KE",
+  name: "Kenya",
+  currency: "KES",
+  symbol: "KSh",
+  flag: "🇰🇪",
+  rate: 130,
+  swift_example: "KCBLKENX",
+  iban: false
+}, {
+  code: "ZA",
+  name: "South Africa",
+  currency: "ZAR",
+  symbol: "R",
+  flag: "🇿🇦",
+  rate: 18.7,
+  swift_example: "ABSAZAJJ",
+  iban: false
+}, {
+  code: "CH",
+  name: "Switzerland",
+  currency: "CHF",
+  symbol: "CHF",
+  flag: "🇨🇭",
+  rate: 0.90,
+  swift_example: "UBSWCHZH",
+  iban: true
+}, {
+  code: "JP",
+  name: "Japan",
+  currency: "JPY",
+  symbol: "¥",
+  flag: "🇯🇵",
+  rate: 149,
+  swift_example: "BOTKJPJT",
+  iban: false
+}, {
+  code: "CN",
+  name: "China",
+  currency: "CNY",
+  symbol: "¥",
+  flag: "🇨🇳",
+  rate: 7.24,
+  swift_example: "ICBKCNBJ",
+  iban: false
+}, {
+  code: "AE",
+  name: "UAE",
+  currency: "AED",
+  symbol: "د.إ",
+  flag: "🇦🇪",
+  rate: 3.67,
+  swift_example: "ARBAAEAD",
+  iban: false
+}, {
+  code: "SG",
+  name: "Singapore",
+  currency: "SGD",
+  symbol: "S$",
+  flag: "🇸🇬",
+  rate: 1.35,
+  swift_example: "DBSSSGSG",
+  iban: false
+}, {
+  code: "MX",
+  name: "Mexico",
+  currency: "MXN",
+  symbol: "$",
+  flag: "🇲🇽",
+  rate: 17.2,
+  swift_example: "BCMRMXMM",
+  iban: false
+}, {
+  code: "BR",
+  name: "Brazil",
+  currency: "BRL",
+  symbol: "R$",
+  flag: "🇧🇷",
+  rate: 4.97,
+  swift_example: "BRASBRRJ",
+  iban: false
+}, {
+  code: "PH",
+  name: "Philippines",
+  currency: "PHP",
+  symbol: "₱",
+  flag: "🇵🇭",
+  rate: 56.8,
+  swift_example: "BOPIPHMM",
+  iban: false
+}, {
+  code: "SN",
+  name: "Senegal",
+  currency: "XOF",
+  symbol: "CFA",
+  flag: "🇸🇳",
+  rate: 614,
+  swift_example: "SGBFSNDA",
+  iban: false
+}, {
+  code: "EG",
+  name: "Egypt",
+  currency: "EGP",
+  symbol: "£",
+  flag: "🇪🇬",
+  rate: 48.5,
+  swift_example: "NBEGEGCX",
+  iban: false
+}, {
+  code: "TZ",
+  name: "Tanzania",
+  currency: "TZS",
+  symbol: "TSh",
+  flag: "🇹🇿",
+  rate: 2520,
+  swift_example: "NLCBTZTX",
+  iban: false
+}];
+const TRANSFER_PURPOSES = ["Family Support / Remittance", "Business Payment", "Education Fees", "Medical Expenses", "Property Purchase", "Investment", "Travel / Tourism", "Loan Repayment", "Government Payment", "Other"];
+function InternationalTransferScreen({
+  user,
+  acct,
+  doTxn,
+  benes,
+  sBenes,
+  t$,
+  onBack
+}) {
+  const [step, sStep] = useState(1);
+  const [country, sCountry] = useState(null);
+  const [recipientName, sRecipientName] = useState("");
+  const [recipientBank, sRecipientBank] = useState("");
+  const [swiftCode, sSwiftCode] = useState("");
+  const [accountNo, sAccountNo] = useState("");
+  const [iban, sIban] = useState("");
+  const [routingOrSort, sRoutingSort] = useState("");
+  const [amount, sAmount] = useState("");
+  const [purpose, sPurpose] = useState("Family Support / Remittance");
+  const [memo, sMemo] = useState("");
+  const [pin, sPin] = useState("");
+  const [sent, sSent] = useState(null);
+  const [saveBene, sSaveBene] = useState(false);
+  const selectedCountry = COUNTRIES.find(c => c.code === country);
+  const usdAmount = parseFloat(amount) || 0;
+  const fee = usdAmount > 0 ? usdAmount >= 1000 ? 15 : usdAmount >= 500 ? 10 : 8 : 0;
+  const totalDebit = usdAmount + fee;
+  const foreignAmount = selectedCountry ? (usdAmount * selectedCountry.rate).toFixed(2) : 0;
+  const exchangeRate = selectedCountry ? selectedCountry.rate : 0;
+  async function confirm() {
+    if (!hasPinSet(user)) return t$("You haven't set a PIN yet. Go to Account → Security Center → PIN to set one.", "warning");
+    if (!verifyPin(pin, user)) return t$("Incorrect PIN. Please try again.", "error");
+    const desc = `Intl Wire to ${recipientName} — ${selectedCountry?.name} (${selectedCountry?.currency})`;
+    const ok = await doTxn("debit", "international_wire", desc, String(totalDebit));
+    if (ok) {
+      if (saveBene) {
+        const nb = {
+          id: uid(),
+          user_id: user.id,
+          name: recipientName,
+          account_number: accountNo || iban,
+          routing: swiftCode,
+          bank_name: recipientBank + " (" + selectedCountry?.name + ")",
+          type: "swift",
+          is_favourite: 0,
+          created_at: today()
+        };
+        await DS.addBene(nb);
+        if (sBenes) sBenes(prev => [nb, ...(prev || [])]);
+      }
+      sSent({
+        name: recipientName,
+        amount: usdAmount,
+        fee,
+        country: selectedCountry,
+        foreignAmount
+      });
+      sStep(4);
+    }
+  }
+  if (step === 4 && sent) return /*#__PURE__*/React.createElement(FullModal, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 32
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 90,
+      height: 90,
+      borderRadius: 45,
+      background: C.greenP,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 44,
+      marginBottom: 24,
+      animation: "popIn .5s ease"
+    }
+  }, "✓"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "serif",
+      fontSize: 26,
+      fontWeight: 700,
+      color: C.green,
+      marginBottom: 8
+    }
+  }, "Transfer Initiated!"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 15,
+      color: C.muted,
+      textAlign: "center",
+      lineHeight: 1.8,
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("strong", null, fmt(sent.amount)), " → ", /*#__PURE__*/React.createElement("strong", null, sent.foreignAmount, " ", sent.country?.currency), /*#__PURE__*/React.createElement("br", null), "to ", /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: C.text
+    }
+  }, sent.name), /*#__PURE__*/React.createElement("br", null), "in ", sent.country?.flag, " ", sent.country?.name), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.blueP,
+      borderRadius: 14,
+      padding: "14px 20px",
+      marginBottom: 32,
+      textAlign: "center",
+      fontSize: 12,
+      color: C.navy,
+      lineHeight: 1.9,
+      width: "100%"
+    }
+  }, /*#__PURE__*/React.createElement("strong", null, "Transfer Fee:"), " ", fmt(sent.fee), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("strong", null, "Expected Arrival:"), " 1–3 Business Days", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("strong", null, "Exchange Rate:"), " 1 USD = ", sent.country?.rate, " ", sent.country?.currency), /*#__PURE__*/React.createElement(Btn, {
+    onClick: onBack,
+    full: true
+  }, "Done")));
+  return /*#__PURE__*/React.createElement(FullModal, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.navy,
+      paddingTop: "env(safe-area-inset-top)",
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement(AppBar, {
+    title: "International Transfer",
+    left: /*#__PURE__*/React.createElement(IBtn, {
+      icon: "←",
+      onClick: step > 1 ? () => sStep(step - 1) : onBack
+    })
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 3,
+      padding: "8px 20px 14px"
+    }
+  }, [1, 2, 3].map(s => /*#__PURE__*/React.createElement("div", {
+    key: s,
+    style: {
+      flex: 1,
+      height: 3,
+      borderRadius: 2,
+      background: step >= s ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.2)"
+    }
+  })))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      overflowY: "auto",
+      padding: 16
+    }
+  }, step === 1 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      fontSize: 16,
+      marginBottom: 14
+    }
+  }, "Select Destination Country"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 10,
+      marginBottom: 20
+    }
+  }, COUNTRIES.map(c => /*#__PURE__*/React.createElement("button", {
+    key: c.code,
+    onClick: () => sCountry(c.code),
+    style: {
+      padding: "12px 10px",
+      borderRadius: 14,
+      border: `2px solid ${country === c.code ? C.blue : C.border}`,
+      background: country === c.code ? C.blueP : "#fff",
+      cursor: "pointer",
+      fontFamily: "inherit",
+      textAlign: "left",
+      transition: "all .15s"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 22,
+      marginBottom: 4
+    }
+  }, c.flag), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      fontSize: 12,
+      color: country === c.code ? C.blue : C.text
+    }
+  }, c.name), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: C.muted
+    }
+  }, "1 USD = ", c.rate, " ", c.currency)))), country && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Card, {
+    style: {
+      marginBottom: 14,
+      background: C.blueP,
+      padding: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      fontSize: 14,
+      marginBottom: 8
+    }
+  }, selectedCountry?.flag, " Sending to ", selectedCountry?.name), [["Currency", selectedCountry?.currency], ["Exchange Rate", "1 USD = " + selectedCountry?.rate + " " + selectedCountry?.currency], ["Est. Arrival", "1–3 Business Days"], ["Transfer Fee", "$8 – $15 USD"]].map(([k, v]) => /*#__PURE__*/React.createElement("div", {
+    key: k,
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      fontSize: 12,
+      marginBottom: 4
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: C.muted
+    }
+  }, k), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontWeight: 600
+    }
+  }, v)))), /*#__PURE__*/React.createElement(Input, {
+    label: "Recipient Full Name *",
+    value: recipientName,
+    onChange: sRecipientName,
+    placeholder: "John Smith",
+    icon: "👤"
+  }), /*#__PURE__*/React.createElement(Input, {
+    label: "Recipient Bank Name *",
+    value: recipientBank,
+    onChange: sRecipientBank,
+    placeholder: "e.g. Zenith Bank",
+    icon: "🏦"
+  }), /*#__PURE__*/React.createElement(Input, {
+    label: "SWIFT / BIC Code *",
+    value: swiftCode,
+    onChange: v => sSwiftCode(v.toUpperCase()),
+    placeholder: selectedCountry?.swift_example || "8-11 character code",
+    icon: "🔢",
+    note: "Find on bank website or ask your recipient"
+  }), selectedCountry?.iban ? /*#__PURE__*/React.createElement(Input, {
+    label: "IBAN *",
+    value: iban,
+    onChange: v => sIban(v.toUpperCase()),
+    placeholder: "e.g. GB29NWBK60161331926819",
+    icon: "🏛",
+    note: "International Bank Account Number"
+  }) : /*#__PURE__*/React.createElement(Input, {
+    label: "Account Number *",
+    value: accountNo,
+    onChange: sAccountNo,
+    placeholder: "Recipient account number",
+    icon: "🔢"
+  }), selectedCountry?.code === "GB" && /*#__PURE__*/React.createElement(Input, {
+    label: "Sort Code",
+    value: routingOrSort,
+    onChange: sRoutingSort,
+    placeholder: "e.g. 60-16-13",
+    icon: "🔣"
+  }), /*#__PURE__*/React.createElement(Picker, {
+    label: "Transfer Purpose *",
+    value: purpose,
+    onChange: sPurpose,
+    options: TRANSFER_PURPOSES
+  }), /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      marginBottom: 20,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: saveBene,
+    onChange: e => sSaveBene(e.target.checked),
+    style: {
+      width: 18,
+      height: 18,
+      accentColor: C.blue
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14,
+      color: C.muted
+    }
+  }, "Save as recipient for future transfers")), /*#__PURE__*/React.createElement(Btn, {
+    onClick: () => {
+      if (!recipientName || !recipientBank || !swiftCode || !accountNo && !iban) return t$("Fill in all required fields", "error");
+      sStep(2);
+    },
+    full: true,
+    color: C.navy
+  }, "Continue →"))), step === 2 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Card, {
+    style: {
+      marginBottom: 16,
+      padding: 16,
+      background: C.blueP
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 12,
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 32
+    }
+  }, selectedCountry?.flag), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      fontSize: 14
+    }
+  }, recipientName), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: C.muted
+    }
+  }, recipientBank, " · ", selectedCountry?.name), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: C.blue,
+      marginTop: 2
+    }
+  }, "SWIFT: ", swiftCode)))), /*#__PURE__*/React.createElement(Card, {
+    style: {
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      marginBottom: 4
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: C.muted
+    }
+  }, "You Send (USD)"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "serif",
+      fontSize: 40,
+      fontWeight: 700,
+      color: C.text,
+      minHeight: 52
+    }
+  }, amount ? fmt(parseFloat(amount) || 0) : "$0.00")), usdAmount > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.greenP,
+      borderRadius: 12,
+      padding: "10px 14px",
+      marginBottom: 10,
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: C.muted
+    }
+  }, "They receive approximately"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      fontSize: 22,
+      color: C.green
+    }
+  }, foreignAmount, " ", selectedCountry?.currency), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: C.muted
+    }
+  }, "Rate: 1 USD = ", exchangeRate, " ", selectedCountry?.currency)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      borderTop: `1px solid ${C.border}`,
+      paddingTop: 14
+    }
+  }, /*#__PURE__*/React.createElement(AmountKey, {
+    value: amount,
+    onChange: sAmount
+  }))), usdAmount > 0 && /*#__PURE__*/React.createElement(Card, {
+    style: {
+      marginBottom: 16
+    }
+  }, [["Transfer Amount", fmt(usdAmount)], ["Wire Transfer Fee", fmt(fee)], ["Total Debited", fmt(totalDebit)], ["Available Balance", fmt(acct.balance)]].map(([k, v], i) => /*#__PURE__*/React.createElement("div", {
+    key: k,
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      padding: "9px 0",
+      borderBottom: i < 3 ? `1px solid ${C.border}` : "none",
+      fontWeight: i === 2 || i === 3 ? 700 : 400
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: i === 2 ? C.text : C.muted
+    }
+  }, k), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: i === 2 ? C.navy : i === 3 ? totalDebit > acct.balance ? C.red : C.green : C.text
+    }
+  }, v)))), /*#__PURE__*/React.createElement(Input, {
+    label: "Message / Memo (optional)",
+    value: memo,
+    onChange: sMemo,
+    placeholder: "e.g. School fees for January",
+    icon: "📝"
+  }), /*#__PURE__*/React.createElement(Btn, {
+    onClick: () => {
+      if (!usdAmount || usdAmount <= 0) return t$("Enter amount", "error");
+      if (totalDebit > acct.balance) return t$("Insufficient funds for transfer + fee", "error");
+      sStep(3);
+    },
+    full: true,
+    color: C.navy
+  }, "Continue →")), step === 3 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Card, {
+    style: {
+      marginBottom: 20,
+      padding: 22
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 40,
+      marginBottom: 8
+    }
+  }, selectedCountry?.flag), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: C.muted
+    }
+  }, "International Wire Transfer"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "serif",
+      fontSize: 32,
+      fontWeight: 700,
+      color: C.navy,
+      marginBottom: 4
+    }
+  }, fmt(usdAmount)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 14,
+      color: C.green,
+      fontWeight: 700
+    }
+  }, "→ ", foreignAmount, " ", selectedCountry?.currency)), [["Recipient", recipientName], ["Bank", recipientBank], ["Country", selectedCountry?.flag + " " + selectedCountry?.name], ["SWIFT/BIC", swiftCode], [selectedCountry?.iban ? "IBAN" : "Account No.", iban || accountNo], ["Purpose", purpose], ["Transfer Amount", fmt(usdAmount)], ["Wire Fee", fmt(fee)], ["Total Debit", fmt(totalDebit)], ["Exchange Rate", "1 USD = " + exchangeRate + " " + selectedCountry?.currency], ["Est. Arrival", "1–3 Business Days"], memo && ["Memo", memo]].filter(Boolean).map(([k, v]) => /*#__PURE__*/React.createElement("div", {
+    key: k,
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      padding: "8px 0",
+      borderBottom: `1px solid ${C.border}`
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12,
+      color: C.muted,
+      flexShrink: 0,
+      marginRight: 8
+    }
+  }, k), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12,
+      fontWeight: 600,
+      textAlign: "right",
+      maxWidth: "60%"
+    }
+  }, v))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12,
+      background: "#FFF8E1",
+      borderRadius: 10,
+      padding: "10px 12px",
+      fontSize: 11,
+      color: "#7a5800",
+      lineHeight: 1.8
+    }
+  }, "⚠️ International wire transfers are subject to US federal reporting requirements. Transfers over $10,000 are reported to FinCEN. This transfer complies with OFAC sanctions screening.")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      fontSize: 15,
+      marginBottom: 4
+    }
+  }, "Enter Your Transaction PIN"), !hasPinSet(user) && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#FFF7ED",
+      borderRadius: 10,
+      padding: "8px 14px",
+      fontSize: 12,
+      color: C.orange,
+      marginTop: 6
+    }
+  }, "⚠️ No PIN set — go to ", /*#__PURE__*/React.createElement("strong", null, "Account → Security → PIN"), " first.")), /*#__PURE__*/React.createElement(PinPad, {
+    value: pin,
+    onChange: sPin
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 24
+    }
+  }), /*#__PURE__*/React.createElement(Btn, {
+    onClick: confirm,
+    full: true,
+    disabled: pin.length < 4,
+    color: C.navy
+  }, "Confirm International Transfer ", fmt(totalDebit)))));
 }
 
 /* ══════════════════════════════════════════════════════
@@ -4984,6 +5748,12 @@ function MoreTab({
   push
 }) {
   const items = [{
+    icon: "🌍",
+    title: "International Transfer",
+    sub: "Send money to 20+ countries worldwide",
+    color: "#7C3AED",
+    s: /*#__PURE__*/React.createElement(InternationalTransferScreen, null)
+  }, {
     icon: "🏛️",
     title: "Personal Loans",
     sub: "Apply for a loan up to $50,000",
@@ -7222,19 +7992,28 @@ function SecurityScreen({
     sSaving(false);
   }
   async function changePin() {
-    if (curPin !== "1234") return t$("Current PIN is incorrect. Demo PIN: 1234", "error");
+    const isFirstTime = !hasPinSet(user);
+    if (!isFirstTime) {
+      /* Verify current PIN */
+      if (!verifyPin(curPin, user)) return t$("Current PIN is incorrect. Please try again.", "error");
+    }
     if (newPin.length !== 4) return t$("PIN must be exactly 4 digits", "error");
     if (newPin !== confPin) return t$("New PINs do not match", "error");
-    if (curPin === newPin) return t$("New PIN must be different", "error");
+    if (!isFirstTime && curPin === newPin) return t$("New PIN must be different from current PIN", "error");
     sSaving(true);
+    const newHash = hashP(newPin);
     await DS.updateUser(user.id, {
-      pin_hash: `h_${newPin}_bpy`
+      pin_hash: newHash
     });
-    await DS.addNotif(user.id, "Your transaction PIN was changed successfully.", "info");
+    sUser(prev => ({
+      ...prev,
+      pin_hash: newHash
+    }));
+    await DS.addNotif(user.id, isFirstTime ? "Transaction PIN created successfully! You can now confirm transfers." : "Your transaction PIN was changed successfully.", "success");
     sCurPin("");
     sNewPin("");
     sConfPin("");
-    t$("Transaction PIN changed!");
+    t$(isFirstTime ? "PIN created successfully! You can now make transfers 🎉" : "Transaction PIN changed!");
     sSaving(false);
   }
   async function savePrefs() {
@@ -7404,8 +8183,8 @@ function SecurityScreen({
     tab: "password"
   }, {
     label: "Transaction PIN Set",
-    done: true,
-    action: "Change",
+    done: hasPinSet(user),
+    action: hasPinSet(user) ? "Change" : "Create",
     tab: "pin"
   }, {
     label: "Login Alerts Enabled",
@@ -7617,7 +8396,7 @@ function SecurityScreen({
   }, "⚠️ After changing your password, you will remain logged in on this device. Other sessions will be signed out automatically.")), tab === "pin" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Card, {
     style: {
       marginBottom: 16,
-      background: C.blueP,
+      background: hasPinSet(user) ? C.blueP : "#FFF7ED",
       padding: 16
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -7626,13 +8405,13 @@ function SecurityScreen({
       fontSize: 14,
       marginBottom: 4
     }
-  }, "🔢 Transaction PIN"), /*#__PURE__*/React.createElement("div", {
+  }, hasPinSet(user) ? "🔢 Change Transaction PIN" : "🔢 Create Your Transaction PIN"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: C.muted,
+      color: hasPinSet(user) ? C.muted : C.orange,
       lineHeight: 1.7
     }
-  }, "Your 4-digit PIN is required for all transfers and withdrawals. Never share it with anyone. Demo current PIN: ", /*#__PURE__*/React.createElement("strong", null, "1234"))), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("div", {
+  }, hasPinSet(user) ? "Your 4-digit PIN is required for all transfers and payments. Never share it with anyone." : "You don't have a PIN yet. Create one to enable transfers and payments.")), /*#__PURE__*/React.createElement(Card, null, hasPinSet(user) && /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 20
     }
@@ -7647,7 +8426,7 @@ function SecurityScreen({
     value: curPin,
     onChange: sCurPin,
     maxLen: 4
-  })), curPin.length === 4 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  })), (!hasPinSet(user) || curPin.length === 4) && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       borderTop: `1px solid ${C.border}`,
       paddingTop: 20,
@@ -7686,7 +8465,7 @@ function SecurityScreen({
     full: true,
     loading: saving,
     color: newPin === confPin ? C.green : C.red
-  }, newPin === confPin ? "Confirm PIN Change ✓" : "PINs do not match")))), tab === "prefs" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Card, {
+  }, newPin === confPin ? hasPinSet(user) ? "Confirm PIN Change ✓" : "Create My PIN ✓" : "PINs do not match")))), tab === "prefs" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Card, {
     style: {
       marginBottom: 14
     }
