@@ -3615,7 +3615,7 @@ function PayTab({
       fontWeight: 700,
       color: "#fff"
     }
-  }, "20+ Countries")), /*#__PURE__*/React.createElement("div", {
+  }, "64 Countries")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
       color: "rgba(255,255,255,0.7)",
@@ -4288,187 +4288,72 @@ function TransferScreen({
 /* ══════════════════════════════════════════════════════
    INTERNATIONAL TRANSFER SCREEN
 ══════════════════════════════════════════════════════ */
-const COUNTRIES = [{
-  code: "NG",
-  name: "Nigeria",
-  currency: "NGN",
-  symbol: "₦",
-  flag: "🇳🇬",
-  rate: 1650,
-  swift_example: "ZENITHNG",
-  iban: false
-}, {
-  code: "GB",
-  name: "United Kingdom",
-  currency: "GBP",
-  symbol: "£",
-  flag: "🇬🇧",
-  rate: 0.79,
-  swift_example: "BARCGB22",
-  iban: true
-}, {
-  code: "EU",
-  name: "Eurozone",
-  currency: "EUR",
-  symbol: "€",
-  flag: "🇪🇺",
-  rate: 0.92,
-  swift_example: "DEUTDEDB",
-  iban: true
-}, {
-  code: "CA",
-  name: "Canada",
-  currency: "CAD",
-  symbol: "CA$",
-  flag: "🇨🇦",
-  rate: 1.36,
-  swift_example: "ROYCCAT2",
-  iban: false
-}, {
-  code: "AU",
-  name: "Australia",
-  currency: "AUD",
-  symbol: "A$",
-  flag: "🇦🇺",
-  rate: 1.53,
-  swift_example: "ANZBAU3M",
-  iban: false
-}, {
-  code: "IN",
-  name: "India",
-  currency: "INR",
-  symbol: "₹",
-  flag: "🇮🇳",
-  rate: 83.5,
-  swift_example: "HDFCINBB",
-  iban: false
-}, {
-  code: "GH",
-  name: "Ghana",
-  currency: "GHS",
-  symbol: "₵",
-  flag: "🇬🇭",
-  rate: 15.8,
-  swift_example: "GHCBGHAC",
-  iban: false
-}, {
-  code: "KE",
-  name: "Kenya",
-  currency: "KES",
-  symbol: "KSh",
-  flag: "🇰🇪",
-  rate: 130,
-  swift_example: "KCBLKENX",
-  iban: false
-}, {
-  code: "ZA",
-  name: "South Africa",
-  currency: "ZAR",
-  symbol: "R",
-  flag: "🇿🇦",
-  rate: 18.7,
-  swift_example: "ABSAZAJJ",
-  iban: false
-}, {
-  code: "CH",
-  name: "Switzerland",
-  currency: "CHF",
-  symbol: "CHF",
-  flag: "🇨🇭",
-  rate: 0.90,
-  swift_example: "UBSWCHZH",
-  iban: true
-}, {
-  code: "JP",
-  name: "Japan",
-  currency: "JPY",
-  symbol: "¥",
-  flag: "🇯🇵",
-  rate: 149,
-  swift_example: "BOTKJPJT",
-  iban: false
-}, {
-  code: "CN",
-  name: "China",
-  currency: "CNY",
-  symbol: "¥",
-  flag: "🇨🇳",
-  rate: 7.24,
-  swift_example: "ICBKCNBJ",
-  iban: false
-}, {
-  code: "AE",
-  name: "UAE",
-  currency: "AED",
-  symbol: "د.إ",
-  flag: "🇦🇪",
-  rate: 3.67,
-  swift_example: "ARBAAEAD",
-  iban: false
-}, {
-  code: "SG",
-  name: "Singapore",
-  currency: "SGD",
-  symbol: "S$",
-  flag: "🇸🇬",
-  rate: 1.35,
-  swift_example: "DBSSSGSG",
-  iban: false
-}, {
-  code: "MX",
-  name: "Mexico",
-  currency: "MXN",
-  symbol: "$",
-  flag: "🇲🇽",
-  rate: 17.2,
-  swift_example: "BCMRMXMM",
-  iban: false
-}, {
-  code: "BR",
-  name: "Brazil",
-  currency: "BRL",
-  symbol: "R$",
-  flag: "🇧🇷",
-  rate: 4.97,
-  swift_example: "BRASBRRJ",
-  iban: false
-}, {
-  code: "PH",
-  name: "Philippines",
-  currency: "PHP",
-  symbol: "₱",
-  flag: "🇵🇭",
-  rate: 56.8,
-  swift_example: "BOPIPHMM",
-  iban: false
-}, {
-  code: "SN",
-  name: "Senegal",
-  currency: "XOF",
-  symbol: "CFA",
-  flag: "🇸🇳",
-  rate: 614,
-  swift_example: "SGBFSNDA",
-  iban: false
-}, {
-  code: "EG",
-  name: "Egypt",
-  currency: "EGP",
-  symbol: "£",
-  flag: "🇪🇬",
-  rate: 48.5,
-  swift_example: "NBEGEGCX",
-  iban: false
-}, {
-  code: "TZ",
-  name: "Tanzania",
-  currency: "TZS",
-  symbol: "TSh",
-  flag: "🇹🇿",
-  rate: 2520,
-  swift_example: "NLCBTZTX",
-  iban: false
-}];
+const COUNTRIES = [
+  {code:"NG",name:"Nigeria",currency:"NGN",symbol:"₦",flag:"🇳🇬",rate:1650,swift_example:"ZENITHNG",iban:false,region:"Africa"},
+  {code:"GH",name:"Ghana",currency:"GHS",symbol:"₵",flag:"🇬🇭",rate:15.8,swift_example:"GHCBGHAC",iban:false,region:"Africa"},
+  {code:"KE",name:"Kenya",currency:"KES",symbol:"KSh",flag:"🇰🇪",rate:130,swift_example:"KCBLKENX",iban:false,region:"Africa"},
+  {code:"ZA",name:"South Africa",currency:"ZAR",symbol:"R",flag:"🇿🇦",rate:18.7,swift_example:"ABSAZAJJ",iban:false,region:"Africa"},
+  {code:"TZ",name:"Tanzania",currency:"TZS",symbol:"TSh",flag:"🇹🇿",rate:2520,swift_example:"NLCBTZTX",iban:false,region:"Africa"},
+  {code:"UG",name:"Uganda",currency:"UGX",symbol:"USh",flag:"🇺🇬",rate:3800,swift_example:"STANBUGA",iban:false,region:"Africa"},
+  {code:"RW",name:"Rwanda",currency:"RWF",symbol:"Fr",flag:"🇷🇼",rate:1300,swift_example:"BKIGRWRW",iban:false,region:"Africa"},
+  {code:"SN",name:"Senegal",currency:"XOF",symbol:"CFA",flag:"🇸🇳",rate:614,swift_example:"SGBFSNDA",iban:false,region:"Africa"},
+  {code:"CI",name:"Ivory Coast",currency:"XOF",symbol:"CFA",flag:"🇨🇮",rate:614,swift_example:"SGBFCIAB",iban:false,region:"Africa"},
+  {code:"CM",name:"Cameroon",currency:"XAF",symbol:"CFA",flag:"🇨🇲",rate:614,swift_example:"SGCBCMCX",iban:false,region:"Africa"},
+  {code:"EG",name:"Egypt",currency:"EGP",symbol:"£",flag:"🇪🇬",rate:48.5,swift_example:"NBEGEGCX",iban:false,region:"Africa"},
+  {code:"ET",name:"Ethiopia",currency:"ETB",symbol:"Br",flag:"🇪🇹",rate:56,swift_example:"CBETETAA",iban:false,region:"Africa"},
+  {code:"ZM",name:"Zambia",currency:"ZMW",symbol:"ZK",flag:"🇿🇲",rate:26,swift_example:"ZNCBZMLU",iban:false,region:"Africa"},
+  {code:"AO",name:"Angola",currency:"AOA",symbol:"Kz",flag:"🇦🇴",rate:850,swift_example:"BPCAANLA",iban:false,region:"Africa"},
+  {code:"MA",name:"Morocco",currency:"MAD",symbol:"MAD",flag:"🇲🇦",rate:10.0,swift_example:"BMCEMAMC",iban:false,region:"Africa"},
+  {code:"GB",name:"United Kingdom",currency:"GBP",symbol:"£",flag:"🇬🇧",rate:0.79,swift_example:"BARCGB22",iban:true,region:"Europe"},
+  {code:"DE",name:"Germany",currency:"EUR",symbol:"€",flag:"🇩🇪",rate:0.92,swift_example:"DEUTDEDB",iban:true,region:"Europe"},
+  {code:"FR",name:"France",currency:"EUR",symbol:"€",flag:"🇫🇷",rate:0.92,swift_example:"BNPAFRPP",iban:true,region:"Europe"},
+  {code:"IT",name:"Italy",currency:"EUR",symbol:"€",flag:"🇮🇹",rate:0.92,swift_example:"UNCRITMM",iban:true,region:"Europe"},
+  {code:"ES",name:"Spain",currency:"EUR",symbol:"€",flag:"🇪🇸",rate:0.92,swift_example:"CAIXESBB",iban:true,region:"Europe"},
+  {code:"NL",name:"Netherlands",currency:"EUR",symbol:"€",flag:"🇳🇱",rate:0.92,swift_example:"ABNANL2A",iban:true,region:"Europe"},
+  {code:"PT",name:"Portugal",currency:"EUR",symbol:"€",flag:"🇵🇹",rate:0.92,swift_example:"CGDIPTPL",iban:true,region:"Europe"},
+  {code:"PL",name:"Poland",currency:"PLN",symbol:"zl",flag:"🇵🇱",rate:4.05,swift_example:"PKOPPLPW",iban:true,region:"Europe"},
+  {code:"SE",name:"Sweden",currency:"SEK",symbol:"kr",flag:"🇸🇪",rate:10.8,swift_example:"SWEDSESS",iban:true,region:"Europe"},
+  {code:"NO",name:"Norway",currency:"NOK",symbol:"kr",flag:"🇳🇴",rate:10.6,swift_example:"DNBANOKK",iban:true,region:"Europe"},
+  {code:"DK",name:"Denmark",currency:"DKK",symbol:"kr",flag:"🇩🇰",rate:6.9,swift_example:"DABADKKK",iban:true,region:"Europe"},
+  {code:"CH",name:"Switzerland",currency:"CHF",symbol:"CHF",flag:"🇨🇭",rate:0.90,swift_example:"UBSWCHZH",iban:true,region:"Europe"},
+  {code:"TR",name:"Turkey",currency:"TRY",symbol:"TRY",flag:"🇹🇷",rate:32.5,swift_example:"ISBKTRIS",iban:true,region:"Europe"},
+  {code:"RO",name:"Romania",currency:"RON",symbol:"lei",flag:"🇷🇴",rate:4.6,swift_example:"RNCBROBU",iban:true,region:"Europe"},
+  {code:"HU",name:"Hungary",currency:"HUF",symbol:"Ft",flag:"🇭🇺",rate:365,swift_example:"OTPVHUHB",iban:true,region:"Europe"},
+  {code:"CZ",name:"Czech Republic",currency:"CZK",symbol:"Kc",flag:"🇨🇿",rate:23.5,swift_example:"KOMBCZPP",iban:true,region:"Europe"},
+  {code:"UA",name:"Ukraine",currency:"UAH",symbol:"UAH",flag:"🇺🇦",rate:41,swift_example:"PBANUA2X",iban:true,region:"Europe"},
+  {code:"CA",name:"Canada",currency:"CAD",symbol:"CA$",flag:"🇨🇦",rate:1.36,swift_example:"ROYCCAT2",iban:false,region:"Americas"},
+  {code:"MX",name:"Mexico",currency:"MXN",symbol:"MXN",flag:"🇲🇽",rate:17.2,swift_example:"BCMRMXMM",iban:false,region:"Americas"},
+  {code:"BR",name:"Brazil",currency:"BRL",symbol:"R$",flag:"🇧🇷",rate:4.97,swift_example:"BRASBRRJ",iban:false,region:"Americas"},
+  {code:"CO",name:"Colombia",currency:"COP",symbol:"COP",flag:"🇨🇴",rate:4000,swift_example:"COLOCOBB",iban:false,region:"Americas"},
+  {code:"AR",name:"Argentina",currency:"ARS",symbol:"ARS",flag:"🇦🇷",rate:900,swift_example:"BSUAARBA",iban:false,region:"Americas"},
+  {code:"CL",name:"Chile",currency:"CLP",symbol:"CLP",flag:"🇨🇱",rate:960,swift_example:"BCHICLRM",iban:false,region:"Americas"},
+  {code:"PE",name:"Peru",currency:"PEN",symbol:"S/.",flag:"🇵🇪",rate:3.75,swift_example:"BCRPPEPL",iban:false,region:"Americas"},
+  {code:"JM",name:"Jamaica",currency:"JMD",symbol:"J$",flag:"🇯🇲",rate:156,swift_example:"BOFAJMKX",iban:false,region:"Americas"},
+  {code:"TT",name:"Trinidad & Tobago",currency:"TTD",symbol:"TT$",flag:"🇹🇹",rate:6.8,swift_example:"RBTTTTPS",iban:false,region:"Americas"},
+  {code:"IN",name:"India",currency:"INR",symbol:"Rs",flag:"🇮🇳",rate:83.5,swift_example:"HDFCINBB",iban:false,region:"Asia"},
+  {code:"PH",name:"Philippines",currency:"PHP",symbol:"PHP",flag:"🇵🇭",rate:56.8,swift_example:"BOPIPHMM",iban:false,region:"Asia"},
+  {code:"PK",name:"Pakistan",currency:"PKR",symbol:"Rs",flag:"🇵🇰",rate:278,swift_example:"HABLPKKA",iban:false,region:"Asia"},
+  {code:"BD",name:"Bangladesh",currency:"BDT",symbol:"BDT",flag:"🇧🇩",rate:110,swift_example:"JANBBDDH",iban:false,region:"Asia"},
+  {code:"LK",name:"Sri Lanka",currency:"LKR",symbol:"Rs",flag:"🇱🇰",rate:305,swift_example:"BCEYLKLX",iban:false,region:"Asia"},
+  {code:"NP",name:"Nepal",currency:"NPR",symbol:"Rs",flag:"🇳🇵",rate:133,swift_example:"NARBNPKA",iban:false,region:"Asia"},
+  {code:"ID",name:"Indonesia",currency:"IDR",symbol:"Rp",flag:"🇮🇩",rate:15800,swift_example:"CENAIDJA",iban:false,region:"Asia"},
+  {code:"MY",name:"Malaysia",currency:"MYR",symbol:"RM",flag:"🇲🇾",rate:4.7,swift_example:"MBBEMYKL",iban:false,region:"Asia"},
+  {code:"TH",name:"Thailand",currency:"THB",symbol:"THB",flag:"🇹🇭",rate:36.5,swift_example:"BKKBTHBK",iban:false,region:"Asia"},
+  {code:"VN",name:"Vietnam",currency:"VND",symbol:"VND",flag:"🇻🇳",rate:25000,swift_example:"BIDVVNVX",iban:false,region:"Asia"},
+  {code:"KR",name:"South Korea",currency:"KRW",symbol:"KRW",flag:"🇰🇷",rate:1350,swift_example:"HVBKKRSE",iban:false,region:"Asia"},
+  {code:"JP",name:"Japan",currency:"JPY",symbol:"JPY",flag:"🇯🇵",rate:149,swift_example:"BOTKJPJT",iban:false,region:"Asia"},
+  {code:"CN",name:"China",currency:"CNY",symbol:"CNY",flag:"🇨🇳",rate:7.24,swift_example:"ICBKCNBJ",iban:false,region:"Asia"},
+  {code:"SG",name:"Singapore",currency:"SGD",symbol:"S$",flag:"🇸🇬",rate:1.35,swift_example:"DBSSSGSG",iban:false,region:"Asia"},
+  {code:"HK",name:"Hong Kong",currency:"HKD",symbol:"HK$",flag:"🇭🇰",rate:7.82,swift_example:"HSBCHKHH",iban:false,region:"Asia"},
+  {code:"AU",name:"Australia",currency:"AUD",symbol:"A$",flag:"🇦🇺",rate:1.53,swift_example:"ANZBAU3M",iban:false,region:"Asia"},
+  {code:"NZ",name:"New Zealand",currency:"NZD",symbol:"NZ$",flag:"🇳🇿",rate:1.62,swift_example:"ANZBNZ22",iban:false,region:"Asia"},
+  {code:"AE",name:"UAE",currency:"AED",symbol:"AED",flag:"🇦🇪",rate:3.67,swift_example:"ARBAAEAD",iban:false,region:"Middle East"},
+  {code:"SA",name:"Saudi Arabia",currency:"SAR",symbol:"SAR",flag:"🇸🇦",rate:3.75,swift_example:"RIBLSARI",iban:false,region:"Middle East"},
+  {code:"QA",name:"Qatar",currency:"QAR",symbol:"QAR",flag:"🇶🇦",rate:3.64,swift_example:"QNBAQAQA",iban:false,region:"Middle East"},
+  {code:"KW",name:"Kuwait",currency:"KWD",symbol:"KWD",flag:"🇰🇼",rate:0.31,swift_example:"NBOKKWKW",iban:false,region:"Middle East"},
+  {code:"JO",name:"Jordan",currency:"JOD",symbol:"JOD",flag:"🇯🇴",rate:0.71,swift_example:"ARAFJOAM",iban:false,region:"Middle East"},
+  {code:"IL",name:"Israel",currency:"ILS",symbol:"ILS",flag:"🇮🇱",rate:3.7,swift_example:"POALILIT",iban:true,region:"Middle East"},
+];
 const TRANSFER_PURPOSES = ["Family Support / Remittance", "Business Payment", "Education Fees", "Medical Expenses", "Property Purchase", "Investment", "Travel / Tourism", "Loan Repayment", "Government Payment", "Other"];
 function InternationalTransferScreen({
   user,
@@ -4481,6 +4366,8 @@ function InternationalTransferScreen({
 }) {
   const [step, sStep] = useState(1);
   const [country, sCountry] = useState(null);
+  const [cSearch, setCSearch] = useState("");
+  const [region, setRegion] = useState("All");
   const [recipientName, sRecipientName] = useState("");
   const [recipientBank, sRecipientBank] = useState("");
   const [swiftCode, sSwiftCode] = useState("");
@@ -4661,16 +4548,25 @@ function InternationalTransferScreen({
       fontSize: 16,
       marginBottom: 14
     }
-  }, "Select Destination Country"), /*#__PURE__*/React.createElement("div", {
+  }, "Select Destination Country"),
+  /*#__PURE__*/React.createElement("div", {style:{background:"#fff",borderRadius:12,padding:"10px 14px",display:"flex",alignItems:"center",gap:10,marginBottom:12,border:"1px solid #E2E8F4"}},
+    /*#__PURE__*/React.createElement("span",{style:{fontSize:18}},"\uD83D\uDD0D"),
+    /*#__PURE__*/React.createElement("input",{value:cSearch,onChange:function(e){setCSearch(e.target.value);},placeholder:"Search country or currency...",style:{flex:1,border:"none",outline:"none",fontSize:14,fontFamily:"inherit",background:"transparent"}}),
+    cSearch&&/*#__PURE__*/React.createElement("button",{onClick:function(){setCSearch("");},style:{background:"none",border:"none",color:"#64748B",cursor:"pointer",fontSize:18}},"×")
+  ),
+  /*#__PURE__*/React.createElement("div",{style:{display:"flex",gap:6,overflowX:"auto",paddingBottom:8,marginBottom:12}},
+    ["All","Africa","Europe","Americas","Asia","Middle East"].map(function(r){return /*#__PURE__*/React.createElement("button",{key:r,onClick:function(){setRegion(r);},style:{whiteSpace:"nowrap",padding:"7px 14px",borderRadius:20,border:"1.5px solid "+(region===r?"#1E5EFF":"#E2E8F4"),background:region===r?"#EEF3FF":"#fff",color:region===r?"#1E5EFF":"#64748B",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}},r);})
+  ),
+  /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "1fr 1fr",
-      gap: 10,
-      marginBottom: 20
+      gap: 8,
+      marginBottom: 16
     }
-  }, COUNTRIES.map(c => /*#__PURE__*/React.createElement("button", {
+  }, COUNTRIES.filter(c => { const mr=region==="All"||c.region===region; const ms=!cSearch||c.name.toLowerCase().includes(cSearch.toLowerCase())||c.currency.toLowerCase().includes(cSearch.toLowerCase()); return mr&&ms; }).map(c => /*#__PURE__*/React.createElement("button", {
     key: c.code,
-    onClick: () => sCountry(c.code),
+    onClick: () => { sCountry(c.code); setCSearch(""); },
     style: {
       padding: "12px 10px",
       borderRadius: 14,
@@ -5858,7 +5754,7 @@ function MoreTab({
   const items = [{
     icon: "🌍",
     title: "International Transfer",
-    sub: "Send money to 20+ countries worldwide",
+    sub: "Send money to 64 countries worldwide · SWIFT",
     color: "#7C3AED",
     s: /*#__PURE__*/React.createElement(InternationalTransferScreen, null)
   }, {
