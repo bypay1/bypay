@@ -375,8 +375,8 @@ const BANK = {
   name: "Bypay Bank",
   tagline: "Smart Banking. Secure Future.",
   ceo: "Daniel Christopher Wilson",
-  phone: "+1 (303) 555-0147",
-  email: "support@bypaybank.com",
+  phone: "+44 7880335734",
+  email: "bypaybank@gmail.com",
   address: "1700 Lincoln Street, Denver, CO 80203",
   city: "Denver, Colorado",
   routing: "102000076",
@@ -487,7 +487,7 @@ const DEMO = {
   admin_users: [{
     id: "ADM1",
     name: BANK.ceo,
-    email: "admin@bypaybank.com",
+    email: "bypaybank@gmail.com",
     password_hash: hashP("admin123"),
     role: "superadmin",
     status: "active"
@@ -2050,14 +2050,14 @@ function AuthScreen({
     label: "Phone Number",
     value: phone,
     onChange: sPhone,
-    placeholder: "+1 (303) 555-0100",
+    placeholder: "+44 7880335734",
     icon: "📱"
   }), /*#__PURE__*/React.createElement(Input, {
     label: "Email Address",
     type: "email",
     value: email,
     onChange: sEmail,
-    placeholder: tab === "admin" ? "admin@bypaybank.com" : "you@example.com",
+    placeholder: tab === "admin" ? "bypaybank@gmail.com" : "you@example.com",
     icon: "✉️"
   }), /*#__PURE__*/React.createElement(Input, {
     label: "Password",
@@ -3347,7 +3347,7 @@ function KYCScreen({
     label: "Phone Number *",
     value: form.phone,
     onChange: v => update("phone", v),
-    placeholder: "+1 (303) 555-0100",
+    placeholder: "+44 7880335734",
     icon: "📱"
   }), /*#__PURE__*/React.createElement(Input, {
     label: "Email Address",
@@ -5782,10 +5782,11 @@ function MoreTab({
     color: user.kyc_status === "verified" ? C.green : C.red,
     s: /*#__PURE__*/React.createElement(KYCScreen, null)
   }, {
-    icon: "📞",
-    title: "Customer Support",
-    sub: `${BANK.phone} · ${BANK.email}`,
-    color: C.navy
+    icon: "💬",
+    title: "Chat on WhatsApp",
+    sub: "Tap to open WhatsApp support chat",
+    color: "#25D366",
+    action: () => window.open("https://wa.me/447351140159", "_blank")
   }, {
     icon: "📄",
     title: "Statements",
@@ -5822,8 +5823,8 @@ function MoreTab({
       gap: 14,
       cursor: item.s ? "pointer" : "default"
     },
-    onClick: () => item.s && push(item.s),
-    press: !!item.s
+    onClick: () => { if (item.action) item.action(); else if (item.s) push(item.s); },
+    press: !!(item.s || item.action)
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 50,
