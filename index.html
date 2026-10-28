@@ -24,6 +24,25 @@ input,select,textarea,button{font-family:inherit;-webkit-appearance:none;}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ── Google Translate: hide Google's own UI, keep our picker ── */
+body{top:0!important;}
+.goog-te-banner-frame,.goog-te-banner-frame.skiptranslate,iframe.skiptranslate,.VIpgJd-ZVi9od-ORHb-OEVmcd,.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,#goog-gt-tt,.goog-tooltip,.goog-te-balloon-frame{display:none!important;visibility:hidden!important;}
+.goog-text-highlight{background:none!important;box-shadow:none!important;}
+#google_translate_element{position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;}
+font{background:transparent!important;box-shadow:none!important;}
+#bp-lang-overlay{position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;}
+#bp-lang-overlay.open{display:flex;}
+.bp-lang-sheet{background:#fff;width:100%;max-width:520px;max-height:82vh;border-radius:22px 22px 0 0;display:flex;flex-direction:column;animation:slideUp .28s ease;padding-bottom:env(safe-area-inset-bottom);}
+.bp-lang-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 10px;}
+.bp-lang-title{font-weight:800;font-size:16px;color:#0D1B3E;}
+.bp-lang-x{width:34px;height:34px;border-radius:17px;border:none;background:#F4F6FB;font-size:20px;color:#64748B;cursor:pointer;}
+.bp-lang-search{margin:0 18px 10px;padding:12px 14px;border:1.5px solid #E2E8F4;border-radius:12px;font-size:15px;font-family:inherit;outline:none;background:#F4F6FB;color:#0D1B3E;}
+.bp-lang-grid{overflow-y:auto;padding:0 18px 10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.bp-lang-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;border:2px solid #E2E8F4;background:#fff;font-family:inherit;font-size:13px;font-weight:600;color:#0D1B3E;cursor:pointer;text-align:left;}
+.bp-lang-item.on{border-color:#1E5EFF;background:#EEF3FF;color:#1E5EFF;}
+.bp-lang-item span:first-child{font-size:22px;}
+.bp-lang-note{padding:6px 18px 14px;font-size:11px;color:#64748B;line-height:1.6;}
 </style>
 <script>
 window.onerror=function(msg,src,line){
@@ -37,6 +56,22 @@ window.onerror=function(msg,src,line){
     +'• Upload to GitHub Pages for full features</div></div>';}
 };
 window.addEventListener("unhandledrejection",function(e){console.error("Unhandled:",e.reason);});
+</script>
+<script>
+/* Google Translate wraps text nodes in <font> tags; stop React crashing when that happens */
+(function(){
+  if(typeof Node!=="function"||!Node.prototype)return;
+  var rc=Node.prototype.removeChild;
+  Node.prototype.removeChild=function(child){
+    if(child.parentNode!==this){return child;}
+    return rc.apply(this,arguments);
+  };
+  var ib=Node.prototype.insertBefore;
+  Node.prototype.insertBefore=function(newNode,refNode){
+    if(refNode&&refNode.parentNode!==this){return newNode;}
+    return ib.apply(this,arguments);
+  };
+})();
 </script>
 <script>/**
  * @license React
@@ -1947,7 +1982,22 @@ function AuthScreen({
       color: "rgba(255,255,255,0.45)",
       letterSpacing: .5
     }
-  }, BANK.fdic, " · Denver, CO"))), /*#__PURE__*/React.createElement("div", {
+  }, BANK.fdic, " · Denver, CO")), /*#__PURE__*/React.createElement("button", {
+    onClick: () => window.openLangPicker && window.openLangPicker(),
+    style: {
+      marginLeft: "auto",
+      background: "rgba(255,255,255,0.14)",
+      border: "1px solid rgba(255,255,255,0.25)",
+      borderRadius: 20,
+      padding: "8px 14px",
+      color: "#fff",
+      fontWeight: 700,
+      fontSize: 12,
+      cursor: "pointer",
+      fontFamily: "inherit",
+      flexShrink: 0
+    }
+  }, "🌐 Language")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 800,
       fontSize: 26,
@@ -2629,7 +2679,9 @@ function HomeTab({
       color: "#fff",
       letterSpacing: 2,
       fontFamily: "monospace"
-    }
+    },
+    translate: "no",
+    className: "notranslate"
   }, user.account_number || "—"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
@@ -5787,6 +5839,12 @@ function MoreTab({
     sub: "Tap to open WhatsApp support chat",
     color: "#25D366",
     action: () => window.open("https://wa.me/447351140159", "_blank")
+  }, {
+    icon: "🌐",
+    title: "Language / Translate",
+    sub: "Change app language · 29 languages",
+    color: "#1E5EFF",
+    action: () => window.openLangPicker && window.openLangPicker()
   }, {
     icon: "📄",
     title: "Statements",
@@ -11834,6 +11892,85 @@ const preLoader = document.getElementById("pre-loader");
 if (preLoader) preLoader.style.display = "none";
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
 })(0);
+</script>
+<!-- Google Translate (hidden engine) + Bypay language picker -->
+<div id="google_translate_element" class="notranslate"></div>
+<script>
+(function(){
+  var LANGS=[["en","English","🇬🇧"],["es","Español","🇪🇸"],["fr","Français","🇫🇷"],["de","Deutsch","🇩🇪"],["pt","Português","🇧🇷"],["it","Italiano","🇮🇹"],["pl","Polski","🇵🇱"],["nl","Nederlands","🇳🇱"],["tr","Türkçe","🇹🇷"],["ru","Русский","🇷🇺"],["uk","Українська","🇺🇦"],["ar","العربية","🇸🇦"],["hi","हिन्दी","🇮🇳"],["bn","বাংলা","🇧🇩"],["ur","اردو","🇵🇰"],["zh-CN","中文 (简体)","🇨🇳"],["ja","日本語","🇯🇵"],["ko","한국어","🇰🇷"],["vi","Tiếng Việt","🇻🇳"],["th","ไทย","🇹🇭"],["id","Bahasa Indonesia","🇮🇩"],["tl","Filipino","🇵🇭"],["sw","Kiswahili","🇰🇪"],["yo","Yorùbá","🇳🇬"],["ig","Igbo","🇳🇬"],["ha","Hausa","🇳🇬"],["am","አማርኛ","🇪🇹"],["zu","isiZulu","🇿🇦"],["af","Afrikaans","🇿🇦"]];
+  var current="en";
+  try{current=localStorage.getItem("bp_lang")||"en";}catch(e){}
+  var overlay=null,grid=null,search=null;
+
+  window.googleTranslateElementInit=function(){
+    try{
+      new google.translate.TranslateElement({
+        pageLanguage:"en",
+        includedLanguages:LANGS.map(function(l){return l[0];}).join(","),
+        autoDisplay:false
+      },"google_translate_element");
+    }catch(e){}
+  };
+  var s=document.createElement("script");
+  s.src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+  s.async=true;
+  s.onerror=function(){};
+  document.head.appendChild(s);
+
+  function fire(el){
+    var e=document.createEvent("HTMLEvents");
+    e.initEvent("change",true,true);
+    el.dispatchEvent(e);
+  }
+  function setLang(code){
+    var combo=document.querySelector("select.goog-te-combo");
+    if(!combo){
+      alert("The translator is still loading (or you are offline). Please try again in a few seconds.");
+      return;
+    }
+    var has=false;
+    for(var i=0;i<combo.options.length;i++){if(combo.options[i].value===code){has=true;break;}}
+    combo.value=has?code:"";
+    fire(combo);fire(combo);
+    current=code;
+    try{localStorage.setItem("bp_lang",code);}catch(e){}
+    close();
+  }
+  function render(filter){
+    grid.innerHTML="";
+    var f=(filter||"").toLowerCase();
+    LANGS.forEach(function(l){
+      if(f&&l[1].toLowerCase().indexOf(f)===-1&&l[0].toLowerCase().indexOf(f)===-1)return;
+      var b=document.createElement("button");
+      b.className="bp-lang-item"+(l[0]===current?" on":"");
+      var a=document.createElement("span");a.textContent=l[2];
+      var n=document.createElement("span");n.textContent=l[1];
+      b.appendChild(a);b.appendChild(n);
+      b.onclick=function(){setLang(l[0]);};
+      grid.appendChild(b);
+    });
+  }
+  function build(){
+    overlay=document.createElement("div");
+    overlay.id="bp-lang-overlay";
+    overlay.className="notranslate";
+    overlay.setAttribute("translate","no");
+    overlay.innerHTML='<div class="bp-lang-sheet"><div class="bp-lang-head"><div class="bp-lang-title">🌐 Language · Idioma · Langue · 语言 · لغة</div><button class="bp-lang-x" aria-label="Close">×</button></div><input class="bp-lang-search" placeholder="Search…"/><div class="bp-lang-grid"></div><div class="bp-lang-note">Automatic translation powered by Google Translate. Wording may not always be exact — for important details contact support.</div></div>';
+    document.body.appendChild(overlay);
+    grid=overlay.querySelector(".bp-lang-grid");
+    search=overlay.querySelector(".bp-lang-search");
+    overlay.querySelector(".bp-lang-x").onclick=close;
+    overlay.onclick=function(e){if(e.target===overlay)close();};
+    search.oninput=function(){render(search.value);};
+  }
+  function close(){if(overlay)overlay.classList.remove("open");}
+  window.openLangPicker=function(){
+    if(!overlay)build();
+    search.value="";
+    render("");
+    overlay.classList.add("open");
+  };
+})();
 </script>
 <!--Start of Tawk.to Script-->
 <script type="text/javascript">
